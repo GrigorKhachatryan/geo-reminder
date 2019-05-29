@@ -1,7 +1,6 @@
 import telebot
 import random
-import math
-from telebot.types import Message
+import geopy.distance
 TOKEN = '820420748:AAF77jTIa-47autLICs2m0XXJZ-V2nJNIdk'
 bot = telebot.TeleBot(TOKEN)
 
@@ -12,6 +11,8 @@ smiles = ['😘',
           '😒',
           ]
 
+temporary_storage = {}
+
 @bot.message_handler(commands=['start'])
 def hello_bot(message):
     bot.send_message(message.chat.id, 'Привет, ты можешь указать свою геопозицию и я скажу тебе, сколько до меня метров')
@@ -20,18 +21,27 @@ def hello_bot(message):
 def location(message):
     long = message.location.longitude
     lat = message.location.latitude
-    la = 55.688815
-    lo = 37.904171
-    R = 111138
-    x = (long - lo) * math.cos((lat + la) * 0.00872664626)
-    y = lat - la
-    d = int(R * math.sqrt(x * x + y * y))
-    bot.send_message(message.chat.id,f'Расстояние до Гриши: {d} метров')
+    # dist = int(geopy.distance.geodesic((lat, long), (la, lo)).m)
+    temporary_storage[message.chat.id] = {'lat': lat ,'long': long}
+    keyboard = telebot.types.InlineKeyboardMarkup()
+    row = []
+    for key, val in {'no': 'Отмена', 'yes': "Напоминалка"}.items():
+        row.append(telebot.types.InlineKeyboardButton(text=val, callback_data=key))
+    keyboard.add(*row)
+    bot.send_message(chat_id=message.chat.id, text='Если все верно, то жми на напоминалку!', reply_markup=keyboard)
 
 @bot.message_handler(func=lambda message: True)
 def upper(message):
-    bot.send_message(message.chat.id, random.choice(smiles))
+    bot.send_message(message.chat.id, f'Расстояние до Гриши: {temporary_storage} метров')
+    print(message)
 
-
+@bot.edited_message_handler(content_types=['location'])
+def location(message):
+    long = message.location.longitude
+    lat = message.location.latitude
+    la = 55.688815
+    lo = 37.904171
+    dist = int(geopy.distance.geodesic((lat, long), (la, lo)).m)
+    bot.send_message(message.chat.id, f'Расстояние до Гриши: {dist} метров')
 
 bot.polling()
