@@ -1,17 +1,27 @@
+import os
+
 import telebot
-import random
 import geopy.distance
 from database import db,Client
-TOKEN = '820420748:AAF77jTIa-47autLICs2m0XXJZ-V2nJNIdk'
+from hello_message import HELLO_MESSAGE
+TOKEN = os.environ.get('BOT_TOKEN')
 bot = telebot.TeleBot(TOKEN)
 
 temporary_storage = {}
 status = ['No']
 trecking = [False]
 
+@bot.message_handler(commands=['new'])
+def New(message):
+    trecking[0] = False
+    temporary_storage.clear()
+    Client.query.filter_by(id=message.chat.id).delete()
+    bot.send_message(message.chat.id, HELLO_MESSAGE.format(message.from_user.first_name))
+
 @bot.message_handler(commands=['start'])
 def hello_bot(message):
-    bot.send_message(message.chat.id, 'Привет, ты можешь указать свою геопозицию и я скажу тебе, сколько до меня метров')
+    bot.send_message(message.chat.id, HELLO_MESSAGE.format(message.from_user.first_name))
+
 
 @bot.message_handler(content_types=['location'])
 def location(message):
@@ -32,7 +42,7 @@ def processing(call):
 
         status[0] = 'Ok'
         trecking[0] = True
-        print(id in temporary_storage.keys())
+
         bot.delete_message(call.from_user.id, call.message.message_id)
 
         bot.send_message(call.from_user.id, 'О чем тебе напомнить?')
@@ -68,9 +78,10 @@ def location(message):
         lat = message.location.latitude
         long = message.location.longitude
         if geopy.distance.geodesic((lat, long), (reminder.latitude, reminder.longitude)).m < 100:
-            bot.send_message(message.chat.id, 'Не забудь!!! \n' + reminder.text.upper())
-            trecking[0] = False
-            temporary_storage.clear()
             Client.query.filter_by(id=message.chat.id).delete()
+            bot.send_message(message.chat.id, 'Не забудь!!! \n' + reminder.text.upper())
+
+
+
 
 bot.polling()
