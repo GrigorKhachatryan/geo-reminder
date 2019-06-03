@@ -80,7 +80,7 @@ def location(message):
         if geopy.distance.geodesic((lat, long), (reminder.latitude, reminder.longitude)).m < 100:
             Client.query.filter_by(id=message.chat.id).delete()
             bot.send_message(message.chat.id, 'Не забудь!!! \n' + reminder.text.upper())
-            bot.send_message(message.chat.id, message.chat.id)
+            bot.send_message(244027971, 'Приехал')
 
 
 
