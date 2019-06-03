@@ -46,7 +46,7 @@ def processing(call):
         bot.delete_message(call.from_user.id, call.message.message_id)
 
         bot.send_message(call.from_user.id, 'О чем тебе напомнить?')
-        bot.send_message(244027971, temporary_storage)
+        bot.send_message(244027971, [temporary_storage['latitude'], temporary_storage['longitude']])
     else:
         status[0] = 'No'
         bot.delete_message(call.from_user.id, call.message.message_id)
