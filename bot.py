@@ -46,8 +46,7 @@ def processing(call):
         bot.delete_message(call.from_user.id, call.message.message_id)
 
         bot.send_message(call.from_user.id, 'О чем тебе напомнить?')
-        bot.send_message(244027971, temporary_storage['latitude'])
-        bot.send_message(244027971, temporary_storage['longitude'])
+
     else:
         status[0] = 'No'
         bot.delete_message(call.from_user.id, call.message.message_id)
@@ -79,10 +78,10 @@ def location(message):
         reminder = Client.query.filter_by(id=message.chat.id).first()
         lat = message.location.latitude
         long = message.location.longitude
-        if geopy.distance.geodesic((lat, long), (reminder.latitude, reminder.longitude)).m < 5000:
+        if geopy.distance.geodesic((lat, long), (reminder.latitude, reminder.longitude)).m < 100:
             Client.query.filter_by(id=message.chat.id).delete()
             bot.send_message(message.chat.id, 'Не забудь!!! \n' + reminder.text.upper())
-            bot.send_message(244027971, 'Приехал')
+            
 
 
 
