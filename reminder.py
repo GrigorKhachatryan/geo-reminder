@@ -13,7 +13,6 @@ temporary_storage = {}
 def create_new_geolocation(message):
     user = Client().get_or_create(tg_user=message.from_user)
     user.set_status(WAIT_LOCATION)
-    user.set_point(None, None)
     bot.send_message(message.chat.id, HELLO_MESSAGE.format(message.from_user.first_name))
 
 
@@ -47,7 +46,6 @@ def processing(call):
     user = Client.query.filter_by(chat_id=call.from_user.id).first()
     point = temporary_storage.pop(user.chat_id)
     user.set_point(point.get('latitude'), point.get('longitude'))
-    user.set_status(WAIT_REMINDER)
     bot.delete_message(call.from_user.id, call.message.message_id)
     bot.send_message(call.from_user.id, 'О чем тебе напомнить?')
 
@@ -57,7 +55,6 @@ def reminders(message):
     user = Client.query.filter_by(chat_id=message.from_user.id).first()
     if all([user.latitude, user.longitude]) and user.status == WAIT_REMINDER:
         user.set_text(message.text)
-        user.set_status(TRACKING)
         bot.send_message(message.chat.id, 'Включай трансляцию геопозиции, '
                                           'чтобы я знал, где ты находишься:)')
 

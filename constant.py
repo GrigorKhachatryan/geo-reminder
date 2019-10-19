@@ -7,8 +7,17 @@ HELLO_MESSAGE = """
 2. Делишься гео-локацией в режиме реального времени, чтобы я понимал где ты идешь.
 """
 
-TOKEN = os.environ['TOKEN']
-URI = os.environ['URI']
+
+def get_env_param(name):
+    try:
+        val = os.environ[name]
+    except KeyError:
+        raise Exception(f'Not set param {name} in the environment')
+    return val
+
+
+TOKEN = get_env_param('TOKEN')
+URI = get_env_param('URI')
 
 WAIT_START = 0
 WAIT_LOCATION = 1

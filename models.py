@@ -1,4 +1,5 @@
 from app import db
+from constant import WAIT_REMINDER, TRACKING
 
 
 class Client(db.Model):
@@ -16,11 +17,13 @@ class Client(db.Model):
 
     def set_point(self, lat, lon):
         self.latitude, self.longitude = lat, lon
+        self.status = WAIT_REMINDER
         db.session.add(self)
         db.session.commit()
 
     def set_text(self, text):
         self.text = text
+        self.status = TRACKING
         db.session.add(self)
         db.session.commit()
 
@@ -33,4 +36,3 @@ class Client(db.Model):
         db.session.add(self)
         db.session.commit()
         return self
-
