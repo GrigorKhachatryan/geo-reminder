@@ -7,14 +7,12 @@ class Client(db.Model):
     longitude = db.Column(db.Float, nullable=True)
     latitude = db.Column(db.Float, nullable=True)
     text = db.Column(db.Text, nullable=True)
-    status = db.Column(db.Boolean, default=False)
+    status = db.Column(db.Integer)
 
     def get_or_create(self, tg_user):
-        self.chat_id = getattr(tg_user, 'id', None)
-        if not self.chat_id:
-            raise AttributeError
+        self.chat_id = getattr(tg_user, 'id')
         user = Client.query.filter_by(chat_id=self.chat_id).first()
-        return user if user else self.__create(tg_user)
+        return user if user else self.create(tg_user)
 
     def set_point(self, lat, lon):
         self.latitude, self.longitude = lat, lon
@@ -28,13 +26,11 @@ class Client(db.Model):
 
     def set_status(self, status):
         self.status = status
-        db.session.add(self)
         db.session.commit()
 
-    def __create(self, tg_user):
-        self.chat_id = getattr(tg_user, 'id', None)
-        if not self.chat_id:
-            raise AttributeError
+    def create(self, tg_user):
+        self.chat_id = getattr(tg_user, 'id')
         db.session.add(self)
         db.session.commit()
         return self
+
