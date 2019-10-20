@@ -1,7 +1,7 @@
 import telebot
 from geopy import distance
-from models import Client
-from constant import *
+from models import Client, MyStatusEnum
+from constant import TOKEN, HELLO_MESSAGE
 
 
 bot = telebot.TeleBot(TOKEN)
@@ -11,8 +11,7 @@ temporary_storage = {}
 
 @bot.message_handler(commands=['start'])
 def create_new_geolocation(message):
-    user = Client().get_or_create(tg_user=message.from_user)
-    user.set_status(WAIT_LOCATION)
+    Client().get_or_create(tg_user=message.from_user)
     bot.send_message(message.chat.id, HELLO_MESSAGE.format(message.from_user.first_name))
 
 
@@ -24,7 +23,7 @@ def location(message):
         return
 
     user = Client.query.filter_by(chat_id=message.chat.id).first()
-    if user.status != WAIT_LOCATION:
+    if user.status != MyStatusEnum.WAIT_LOCATION:
         return
 
     temporary_storage[user.chat_id] = {'latitude': lat, 'longitude': lon}
@@ -53,7 +52,7 @@ def processing(call):
 @bot.message_handler(func=lambda message: True)
 def reminders(message):
     user = Client.query.filter_by(chat_id=message.from_user.id).first()
-    if all([user.latitude, user.longitude]) and user.status == WAIT_REMINDER:
+    if all([user.latitude, user.longitude]) and user.status == MyStatusEnum.WAIT_REMINDER:
         user.set_text(message.text)
         bot.send_message(message.chat.id, 'Включай трансляцию геопозиции, '
                                           'чтобы я знал, где ты находишься:)')
@@ -62,10 +61,11 @@ def reminders(message):
 @bot.edited_message_handler(content_types=['location'])
 def geolocation_tracking(message):
     user = Client.query.filter_by(chat_id=message.chat.id).first()
-    if user.status != TRACKING:
+    if user.status != MyStatusEnum.TRACKING:
         return
 
     lat, lon = message.location.latitude, message.location.longitude
-    if distance.geodesic((lat, lon), (user.latitude, user.longitude)).m < 100:
-        user.set_status(WAIT_START)
+    if distance.geodesic((lat, lon), (user.latitude, user.longitude)).m < 500:
         bot.send_message(message.chat.id, 'Не забудь!!! \n' + user.text.upper())
+        user.set_point(None, None)
+

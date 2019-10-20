@@ -18,8 +18,3 @@ def get_env_param(name):
 
 TOKEN = get_env_param('TOKEN')
 URI = get_env_param('URI')
-
-WAIT_START = 0
-WAIT_LOCATION = 1
-WAIT_REMINDER = 2
-TRACKING = 3
