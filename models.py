@@ -38,10 +38,6 @@ class Client(db.Model):
         db.session.add(self)
         db.session.commit()
 
-    def set_status(self, status):
-        self.status = status
-        db.session.commit()
-
     def create(self, tg_user):
         self.chat_id = getattr(tg_user, 'id')
         self.status = MyStatusEnum.WAIT_LOCATION
