@@ -19,7 +19,12 @@ def webhook():
     return ''
 
 
+def start_on_server():
+    bot.set_webhook(url='https://georeminder.herokuapp.com/' + TOKEN)
+    app.run(host='0.0.0.0', port=5432, debug=True)
+
+
 if __name__ == '__main__':
     from models import *
     db.create_all()
-    bot.polling()
+    start_on_server()

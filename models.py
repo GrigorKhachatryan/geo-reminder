@@ -1,6 +1,6 @@
-from app import db
 import enum
 from sqlalchemy import Enum
+from app import db
 
 
 class Condition(enum.Enum):
@@ -23,11 +23,8 @@ class Users(db.Model):
         return user if user else self.create(tg_user)
 
     def set_point(self, lat, lon):
+        self.status = Condition.WAIT_REMINDER if lat and lon else Condition.WAIT_LOCATION
         self.latitude, self.longitude = lat, lon
-        if not all([self.latitude, self.longitude]):
-            self.status = Condition.WAIT_LOCATION
-        else:
-            self.status = Condition.WAIT_REMINDER
         db.session.add(self)
         db.session.commit()
 

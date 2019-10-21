@@ -1,12 +1,12 @@
 import telebot
 from geopy import distance
-from models import Users, Condition
-from constant import TOKEN, HELLO_MESSAGE
+from models import Condition, Users
+from constant import HELLO_MESSAGE, TOKEN
 
 
 bot = telebot.TeleBot(TOKEN)
 
-temporary_storage = {}
+local_storage = {}
 
 
 @bot.message_handler(commands=['start'])
@@ -28,7 +28,7 @@ def location(message):
     if user.status != Condition.WAIT_LOCATION:
         return
 
-    temporary_storage[user.chat_id] = {'latitude': lat, 'longitude': lon}
+    local_storage[user.chat_id] = {'latitude': lat, 'longitude': lon}
     keyboard = telebot.types.InlineKeyboardMarkup()
     row = []
     for key, val in {'no': 'Отмена', 'yes': "Напоминалка"}.items():
@@ -45,7 +45,7 @@ def processing(call):
         return
 
     user = Users.query.filter_by(chat_id=call.from_user.id).first()
-    point = temporary_storage.pop(user.chat_id)
+    point = local_storage.pop(user.chat_id)
     user.set_point(point.get('latitude'), point.get('longitude'))
     bot.delete_message(call.from_user.id, call.message.message_id)
     bot.send_message(call.from_user.id, 'О чем тебе напомнить?')
