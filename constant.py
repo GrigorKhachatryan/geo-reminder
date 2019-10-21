@@ -12,7 +12,7 @@ def get_env_param(name):
     try:
         val = os.environ[name]
     except KeyError:
-        raise Exception(f'Not set param {name} in the environment')
+        raise Exception('Not set param {} in the environment'.format(name))
     return val
 
 

@@ -1,6 +1,6 @@
 import telebot
 from geopy import distance
-from models import Client, MyStatusEnum
+from models import Users, Condition
 from constant import TOKEN, HELLO_MESSAGE
 
 
@@ -11,7 +11,9 @@ temporary_storage = {}
 
 @bot.message_handler(commands=['start'])
 def create_new_geolocation(message):
-    Client().get_or_create(tg_user=message.from_user)
+    user = Users().get_or_create(tg_user=message.from_user)
+    if all([user.latitude, user.longitude]):
+        user.set_point(None, None)
     bot.send_message(message.chat.id, HELLO_MESSAGE.format(message.from_user.first_name))
 
 
@@ -22,8 +24,8 @@ def location(message):
         bot.send_message(message.chat.id, "Что-то не так, не могу понять твои координаты")
         return
 
-    user = Client.query.filter_by(chat_id=message.chat.id).first()
-    if user.status != MyStatusEnum.WAIT_LOCATION:
+    user = Users.query.filter_by(chat_id=message.chat.id).first()
+    if user.status != Condition.WAIT_LOCATION:
         return
 
     temporary_storage[user.chat_id] = {'latitude': lat, 'longitude': lon}
@@ -42,7 +44,7 @@ def processing(call):
         bot.edit_message_text("Жду новой геопозиции", call.from_user.id, call.message.message_id)
         return
 
-    user = Client.query.filter_by(chat_id=call.from_user.id).first()
+    user = Users.query.filter_by(chat_id=call.from_user.id).first()
     point = temporary_storage.pop(user.chat_id)
     user.set_point(point.get('latitude'), point.get('longitude'))
     bot.delete_message(call.from_user.id, call.message.message_id)
@@ -51,8 +53,8 @@ def processing(call):
 
 @bot.message_handler(func=lambda message: True)
 def reminders(message):
-    user = Client.query.filter_by(chat_id=message.from_user.id).first()
-    if all([user.latitude, user.longitude]) and user.status == MyStatusEnum.WAIT_REMINDER:
+    user = Users.query.filter_by(chat_id=message.from_user.id).first()
+    if user.status == Condition.WAIT_REMINDER:
         user.set_text(message.text)
         bot.send_message(message.chat.id, 'Включай трансляцию геопозиции, '
                                           'чтобы я знал, где ты находишься:)')
@@ -60,12 +62,11 @@ def reminders(message):
 
 @bot.edited_message_handler(content_types=['location'])
 def geolocation_tracking(message):
-    user = Client.query.filter_by(chat_id=message.chat.id).first()
-    if user.status != MyStatusEnum.TRACKING:
+    user = Users.query.filter_by(chat_id=message.chat.id).first()
+    if user.status != Condition.TRACKING:
         return
 
     lat, lon = message.location.latitude, message.location.longitude
     if distance.geodesic((lat, lon), (user.latitude, user.longitude)).m < 500:
-        bot.send_message(message.chat.id, 'Не забудь!!! \n' + user.text.upper())
         user.set_point(None, None)
-
+        bot.send_message(message.chat.id, 'Не забудь!!! \n' + user.text.upper())
