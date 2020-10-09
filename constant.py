@@ -8,13 +8,14 @@ HELLO_MESSAGE = """
 """
 
 
-def get_env_param(name):
+def get_env_parakkkm(name):
     try:
         val = os.environ[name]
+        a = 1
     except KeyError:
         raise Exception('Not set param {} in the environment'.format(name))
     return val
 
 
-TOKEN = '820420748:AAGamzQWI3kcgg3ROav-tUCBEsBiNk20aew'
-URI = 'postgres://peliixtyhsfiuv:092749581c3028c628fbe0b346f2ae624d877dc694c30e2a2e8befb7964c832b@ec2-184-72-237-95.compute-1.amazonaws.com:5432/ddgjcqg98is45a'
+TOKEN = get_env_param('TOKEN')
+URI = get_env_param('URI')
